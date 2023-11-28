@@ -3,29 +3,81 @@
 [![](https://img.shields.io/badge/Open_in_DevExpress_Support_Center-FF7200?style=flat-square&logo=DevExpress&logoColor=white)](https://supportcenter.devexpress.com/ticket/details/E4015)
 [![](https://img.shields.io/badge/📖_How_to_use_DevExpress_Examples-e9f6fc?style=flat-square)](https://docs.devexpress.com/GeneralInformation/403183)
 <!-- default badges end -->
-<!-- default file list -->
-*Files to look at*:
 
-* [SchedulerController.cs](./CS/Scheduler.CustomizationGotoDateForm/Controller/SchedulerController.cs)
-* [SchedulerExtensionHelper.cs](./CS/Scheduler.CustomizationGotoDateForm/ExtensionHelpers/SchedulerExtensionHelper.cs)
+# Scheduler for ASP.NET NVC - How to customize the Go to Date dialog
+
+This example demonstrates how to implement a custom **Go to Date** dialog.
+
+![](scheduler-custom-go-to-date-form.png)
+
+## Implementation Details
+
+1. The form contains a single [Calendar](https://docs.devexpress.com/AspNetMvc/8981/components/data-editors-extensions/calendar) extension. Call the [SchedulerSettings.OptionsForms.SetGotoDateFormTemplateContent](https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.MVCxSchedulerOptionsForms.SetGotoDateFormTemplateContent(System.Action-DevExpress.Web.ASPxScheduler.GotoDateFormTemplateContainer-)) method to specify a template for rendering the **Go to Date** form.
+
+```csharp
+settings.OptionsForms.SetGotoDateFormTemplateContent(c => {
+    Html.DevExpress().Calendar(calendarSettings => {
+        calendarSettings.Name = "calendar";
+        calendarSettings.Properties.ClientSideEvents.SelectionChanged = "OnCalendarSelectionChanged";
+        calendarSettings.Properties.ShowClearButton = false;
+    }).Bind(c.Date).Render();
+});
+```
+
+2. Specify the [CalendarClientSideEvents.SelectionChanged](https://docs.devexpress.com/AspNet/DevExpress.Web.CalendarClientSideEvents.SelectionChanged) property to subscribe to selection changing in the calendar. The event handler calls the [ASPxClientScheduler.GoToDateFormApply](https://docs.devexpress.com/AspNet/js-ASPxClientScheduler.GoToDateFormApply) method to initiate a callback to pass form data to the server control.
+
+```jscript
+function OnCalendarSelectionChanged(s, e){
+    gotoDateCallback = true;
+    scheduler.GoToDateFormApply();
+}
+```
+
+3. The [MVCxSchedulerClientSideEvents.BeginCallback](https://docs.devexpress.com/AspNet/DevExpress.Web.CallbackClientSideEventsBase.BeginCallback) event is handled to obtain a new date from the calendar and pass it to the server.
+
+```jscript
+function OnSchedulerBeginCallback(s, e){
+    if(gotoDateCallback){
+        e.customArgs["NewDate"] = calendar.GetValueString();
+        gotoDateCallback = false;
+    }
+}
+```
+
+4. Implement a special [callback command](https://docs.devexpress.com/AspNet/5462/components/scheduler/concepts/callback-commands) to handle this request properly. Create a `DevExpress.Web.ASPxScheduler.Internal.GotoDateFormCallbackCommand` class successor and override its `ParseParameters` and `ExecuteCore` methods. In the `ExecuteCore` method, call methods of the [IDateTimeNavigationService](https://docs.devexpress.com/CoreLibraries/DevExpress.XtraScheduler.Services.IDateTimeNavigationService) interface to perform date navigation in the scheduler.
+  
+```csharp
+public class MVCxSchedulerGotoDateFormCallbackCommand: GotoDateFormCallbackCommand {
+    public MVCxSchedulerGotoDateFormCallbackCommand(MVCxScheduler control)
+        : base(control) {
+    }
+    public new DateTime NewDate { get; protected set; }
+    protected override void ParseParameters(string parameters) {
+        string rawDate = HttpContext.Current.Request["NewDate"];
+        NewDate = DateTime.Parse(rawDate);
+    }
+    protected override void ExecuteCore() {
+        IDateTimeNavigationService service = (IDateTimeNavigationService)Control.GetService(typeof(IDateTimeNavigationService));
+        if (service != null)
+            service.GoToDate(NewDate);
+    }
+}
+```
+
+5. Create a delegate method for the [SchedulerSettings.BeforeExecuteCallback](https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.SchedulerSettings.BeforeExecuteCallbackCommand) property to execute your custom command instead of the default command when the `GotoDateForm` command is queried for execution.
+
+```csharp
+settings.BeforeExecuteCallbackCommand = (sender, e) => {
+    if(e.CommandId == SchedulerCallbackCommandId.GotoDateForm)
+        e.Command = new MVCxSchedulerGotoDateFormCallbackCommand((MVCxScheduler)sender);
+};
+```
+
+## Files to Review
+
 * [SchedulingDataClasses.cs](./CS/Scheduler.CustomizationGotoDateForm/Models/SchedulingDataClasses.cs)
 * [Scheduler.cshtml](./CS/Scheduler.CustomizationGotoDateForm/Views/Scheduler/Scheduler.cshtml)
 * [SchedulerPartial.cshtml](./CS/Scheduler.CustomizationGotoDateForm/Views/Scheduler/SchedulerPartial.cshtml)
-<!-- default file list end -->
-# Scheduler - How to customize the Go to Date dialog
 
-
-<p>This sample project illustrates how you can invoke a custom form instead of the standard <strong>Go to Date </strong>dialog and implement the functionality that enables the end-user to navigate dates using the custom form.<br />
-The technique utilized in this example is briefly explained below.</p><p>Let's start with the custom form.<br />
-The custom form consists of a single <a href="https://docs.devexpress.com/AspNetMvc/8981/components/data-editors-extensions/calendar"><u>Calendar control</u></a>. Its settings are specified via the <a href="https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.CalendarSettings"><u>CalendarSettings</u></a> properties. <br />
-The <a href="https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.MVCxSchedulerOptionsForms.SetGotoDateFormTemplateContent(System.Action-DevExpress.Web.ASPxScheduler.GotoDateFormTemplateContainer-)"><u>SchedulerSettings.OptionsForms.SetGotoDateFormTemplateContent</u></a> method is used to include a rendered custom form into the <strong>SchedulerPartial </strong>view.<br />
-To handle date selection within the Calendar control, we subscribe to the corresponding client-side event using the <a href="http://documentation.devexpress.com/#AspNet/DevExpressWebASPxEditorsCalendarClientSideEvents_SelectionChangedtopic"><u>CalendarClientSideEvents.SelectionChanged</u></a> property.<br />
-The event handler toggles the value of the boolean <strong>gotoDateCallback </strong>variable that indicates whether a special processing is required on a scheduler callback. Then the client-side <a href="http://documentation.devexpress.com/#AspNet/DevExpressWebASPxSchedulerScriptsASPxClientScheduler_GoToDateFormApplytopic"><strong><u>ASPxClientScheduler.GoToDateFormApply</u></strong></a> method is called that initiates a callback to pass form data to the server control.<br />
-To handle a scheduler callback, we subscribe to the <strong>BeginCallback</strong> client-side event of the Scheduler. The <strong>SchedulerSettings.ClientSideEvents.BeginCallback</strong> property specifies the name of the handler function.<br />
-If the <strong>gotoDateCallback</strong> indicator is turned on, the function obtains new date from the calendar located in the custom form and passes it on to the callee. <br />
-To handle this request properly, we need a specialized <a href="http://documentation.devexpress.com/#AspNet/CustomDocument5462"><u>callback command</u></a>. We inherit this command from the <strong>DevExpress.Web.ASPxScheduler.Internal.GotoDateFormCallbackCommand</strong> class and override its <i>ParseParameters </i>and <i>ExecuteCore </i>methods. To register this command so it is executed instead of the default <i>GotoDateFormCallbackCommand</i>, the <a href="https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.SchedulerSettings.BeforeExecuteCallbackCommand"><strong><u>SchedulerSettings.BeforeExecuteCallbackCommand</u></strong></a><strong> </strong>property is used. It specifies a custom handler that switches command execution when the command with the <strong>SchedulerCallbackCommandId.GotoDateForm </strong>identifier is queried for execution.<br />
-Finally, within the <i>ExecuteCore </i>method of a custom <strong>MVCxSchedulerGotoDateFormCallbackCommand</strong> command, methods of the <a href="http://documentation.devexpress.com/#CoreLibraries/clsDevExpressXtraSchedulerServicesIDateTimeNavigationServicetopic"><u>IDateTimeNavigationService interface</u></a> are called to perform date navigation within the scheduler.</p><p>When the application runs, select the <strong>Go to Date</strong> in the context menu. The result is shown in the picture below.</p><p><img src="https://raw.githubusercontent.com/DevExpress-Examples/scheduler-how-to-customize-the-go-to-date-dialog-e4015/14.1.6+/media/d7891d12-4c60-45e5-904b-c62fa5aca5e4.png"></p>
-
-<br/>
 
 
