@@ -3,7 +3,7 @@
 [![](https://img.shields.io/badge/📖_How_to_use_DevExpress_Examples-e9f6fc?style=flat-square)](https://docs.devexpress.com/GeneralInformation/403183)
 <!-- default badges end -->
 
-# Scheduler for ASP.NET NVC - How to customize the Go to Date dialog
+# Scheduler for ASP.NET MVC - How to customize the Go to Date dialog
 
 This example demonstrates how to implement a custom **Go to Date** dialog.
 
@@ -11,7 +11,7 @@ This example demonstrates how to implement a custom **Go to Date** dialog.
 
 ## Implementation Details
 
-1. Call the [SetGotoDateFormTemplateContent](https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.MVCxSchedulerOptionsForms.SetGotoDateFormTemplateContent(System.Action-DevExpress.Web.ASPxScheduler.GotoDateFormTemplateContainer-)) method to specify a custom content for the **Go to Date** form. Add a single [Calendar](https://docs.devexpress.com/AspNetMvc/8981/components/data-editors-extensions/calendar) extension to the form. 
+1. Call the [SetGotoDateFormTemplateContent](https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.MVCxSchedulerOptionsForms.SetGotoDateFormTemplateContent(System.Action-DevExpress.Web.ASPxScheduler.GotoDateFormTemplateContainer-)) method to specify custom content for the **Go to Date** form. Add a single [Calendar](https://docs.devexpress.com/AspNetMvc/8981/components/data-editors-extensions/calendar) extension to the form.
 
     ```csharp
     settings.OptionsForms.SetGotoDateFormTemplateContent(c => {
@@ -23,7 +23,7 @@ This example demonstrates how to implement a custom **Go to Date** dialog.
     });
     ```
 
-2. Specify the [CalendarClientSideEvents.SelectionChanged](https://docs.devexpress.com/AspNet/DevExpress.Web.CalendarClientSideEvents.SelectionChanged) property to subscribe to selection changing in the calendar. The event handler calls the [ASPxClientScheduler.GoToDateFormApply](https://docs.devexpress.com/AspNet/js-ASPxClientScheduler.GoToDateFormApply) method to initiate a callback to the server.
+2. Specify the [CalendarClientSideEvents.SelectionChanged](https://docs.devexpress.com/AspNet/DevExpress.Web.CalendarClientSideEvents.SelectionChanged) property to subscribe to selection changes in the calendar. The event handler calls the [ASPxClientScheduler.GoToDateFormApply](https://docs.devexpress.com/AspNet/js-ASPxClientScheduler.GoToDateFormApply) method to initiate a callback to the server.
 
     ```jscript
     function OnCalendarSelectionChanged(s, e){
