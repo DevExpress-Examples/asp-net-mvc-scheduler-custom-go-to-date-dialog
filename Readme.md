@@ -80,7 +80,7 @@ This example demonstrates how to implement a custom **Go to Date** dialog.
 * [Scheduler.cshtml](./CS/Scheduler.CustomizationGotoDateForm/Views/Scheduler/Scheduler.cshtml)
 * [SchedulerPartial.cshtml](./CS/Scheduler.CustomizationGotoDateForm/Views/Scheduler/SchedulerPartial.cshtml)
 <!-- feedback -->
-## Does This Example Address Your Development Requirements/Objectives?
+## Does this example address your development requirements/objectives?
 
 [<img src="https://www.devexpress.com/support/examples/i/yes-button.svg"/>](https://www.devexpress.com/support/examples/survey.xml?utm_source=github&utm_campaign=asp-net-mvc-scheduler-custom-go-to-date-dialog&~~~was_helpful=yes) [<img src="https://www.devexpress.com/support/examples/i/no-button.svg"/>](https://www.devexpress.com/support/examples/survey.xml?utm_source=github&utm_campaign=asp-net-mvc-scheduler-custom-go-to-date-dialog&~~~was_helpful=no)
 
